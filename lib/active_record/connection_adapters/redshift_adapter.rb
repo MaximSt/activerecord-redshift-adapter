@@ -286,7 +286,7 @@ module ActiveRecord
       end
 
       class StatementPool < ConnectionAdapters::StatementPool
-        def initialize(connection, max)
+        def initialize(*args)
           super
           @counter = 0
           @cache   = Hash.new { |h,pid| h[pid] = {} }
@@ -360,8 +360,9 @@ module ActiveRecord
         @table_alias_length = nil
 
         connect
-        @statements = StatementPool.new @connection,
-                                        config.fetch(:statement_limit) { 1000 }
+        args = Rails::VERSION::MAJOR >= 5 ? [config.fetch(:statement_limit) { 1000 }] : [@connection,
+                                                  config.fetch(:statement_limit) { 1000 }]
+        @statements = StatementPool.new *args
 
         if redshift_version < 80002
           raise "Your version of Redshift (#{redshift_version}) is too old, please upgrade!"
