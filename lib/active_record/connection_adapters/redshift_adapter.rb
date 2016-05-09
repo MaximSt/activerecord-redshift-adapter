@@ -234,6 +234,17 @@ module ActiveRecord
     # * <tt>:encoding</tt> - An optional client encoding that is used in a <tt>SET client_encoding TO
     #   <encoding></tt> call on the connection.
     class RedshiftAdapter < AbstractAdapter
+      module SchemaStatements
+        def tables(name = nil)
+          if name
+            ActiveSupport::Deprecation.warn(<<-MSG.squish)
+              Passing arguments to #tables is deprecated without replacement.
+            MSG
+          end
+
+          select_values("SELECT tablename FROM pg_tables WHERE schemaname = ANY(current_schemas(false))", 'SCHEMA')
+        end
+      end
       class TableDefinition < ActiveRecord::ConnectionAdapters::TableDefinition
         def xml(*args)
           options = args.extract_options!
